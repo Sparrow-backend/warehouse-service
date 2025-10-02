@@ -5,7 +5,7 @@ const dotenv = require('dotenv')
 
 dotenv.config()
 
-const PORT = process.env.PORT || 8002
+const PORT = process.env.PORT || 8004
 
 mongoose.connection.once('open', () => {
     console.log("MongoDB is ready!")
