@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 const AddressSchema = require('../address/address.mongo')
 
-const WarehouseSchema = new mongoose.model({
+const WarehouseSchema = new mongoose.Schema({
     name: {
         type: String,
         required: true
@@ -44,3 +44,5 @@ const WarehouseSchema = new mongoose.model({
         default: Date.now
     }
 })
+
+module.exports = mongoose.model("Warehouse", WarehouseSchema)
