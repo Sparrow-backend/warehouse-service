@@ -1,9 +1,24 @@
 const Warehouse = require('./warehouse.mongo');
+const fetch = require('node-fetch');
 
 async function createWarehouse(warehouseData) {
     try {
         const warehouse = new Warehouse(warehouseData);
         await warehouse.save();
+        
+        // Send notification to contact person
+        if (warehouseData.contact) {
+            await sendNotification({
+                userId: warehouseData.contact,
+                type: 'warehouse_update',
+                title: 'Warehouse Created',
+                message: `New warehouse ${warehouse.name} has been created`,
+                entityType: 'Warehouse',
+                entityId: warehouse._id,
+                channels: ['in_app', 'email']
+            });
+        }
+        
         return warehouse;
     } catch (error) {
         throw new Error(`Error creating warehouse: ${error.message}`);
@@ -68,7 +83,7 @@ async function updateWarehouse(id, updateData) {
 
 async function addParcelToWarehouse(warehouseId, parcelId) {
     try {
-        return await Warehouse.findByIdAndUpdate(
+        const warehouse = await Warehouse.findByIdAndUpdate(
             warehouseId,
             { 
                 $addToSet: { receivedParcels: parcelId },
@@ -76,6 +91,21 @@ async function addParcelToWarehouse(warehouseId, parcelId) {
             },
             { new: true }
         ).populate('address').populate('contact').populate('receivedParcels');
+        
+        // Send notification
+        if (warehouse && warehouse.contact) {
+            await sendNotification({
+                userId: warehouse.contact._id,
+                type: 'warehouse_update',
+                title: 'Parcel Received',
+                message: `New parcel received at warehouse ${warehouse.name}`,
+                entityType: 'Warehouse',
+                entityId: warehouse._id,
+                channels: ['in_app']
+            });
+        }
+        
+        return warehouse;
     } catch (error) {
         throw new Error(`Error adding parcel to warehouse: ${error.message}`);
     }
@@ -98,7 +128,7 @@ async function removeParcelFromWarehouse(warehouseId, parcelId) {
 
 async function updateWarehouseStatus(id, status) {
     try {
-        return await Warehouse.findByIdAndUpdate(
+        const warehouse = await Warehouse.findByIdAndUpdate(
             id,
             { 
                 status,
@@ -106,6 +136,21 @@ async function updateWarehouseStatus(id, status) {
             },
             { new: true, runValidators: true }
         ).populate('address').populate('contact');
+        
+        // Send notification for status change
+        if (warehouse && warehouse.contact) {
+            await sendNotification({
+                userId: warehouse.contact._id,
+                type: 'warehouse_update',
+                title: 'Warehouse Status Changed',
+                message: `Warehouse ${warehouse.name} status changed to ${status}`,
+                entityType: 'Warehouse',
+                entityId: warehouse._id,
+                channels: ['in_app', 'email']
+            });
+        }
+        
+        return warehouse;
     } catch (error) {
         throw new Error(`Error updating warehouse status: ${error.message}`);
     }
@@ -133,6 +178,27 @@ async function getWarehouseCapacity(id) {
         };
     } catch (error) {
         throw new Error(`Error fetching warehouse capacity: ${error.message}`);
+    }
+}
+
+// Helper function to send notifications
+async function sendNotification(notificationData) {
+    try {
+        const NOTIFICATION_SERVICE_URL = process.env.NOTIFICATION_SERVICE_URL || 'https://notification-service.vercel.app';
+        
+        const response = await fetch(`${NOTIFICATION_SERVICE_URL}/api/notifications`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(notificationData)
+        });
+        
+        if (!response.ok) {
+            console.error('Failed to send notification:', await response.text());
+        }
+    } catch (error) {
+        console.error('Error sending notification:', error);
     }
 }
 
