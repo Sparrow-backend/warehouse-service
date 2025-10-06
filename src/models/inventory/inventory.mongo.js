@@ -1,5 +1,7 @@
 
 const mongoose = require('mongoose')
+require('../warehouse/warehouse.mongo')
+require('../parcel/parcel.mongo')
 
 const InventorySchema = new mongoose.Schema({
     warehouseId: {

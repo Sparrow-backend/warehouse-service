@@ -1,6 +1,8 @@
 const mongoose = require('mongoose')
-const AddressSchema = require('../address/address.mongo')
-
+require('../address/address.mongo')
+require('../user/user.mongo');
+require('../parcel/parcel.mongo');
+ 
 const WarehouseSchema = new mongoose.Schema({
     name: {
         type: String,
