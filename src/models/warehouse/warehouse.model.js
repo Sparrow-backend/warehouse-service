@@ -1,5 +1,6 @@
 const Warehouse = require('./warehouse.mongo');
-const fetch = require('node-fetch');
+const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
+
 
 async function createWarehouse(warehouseData) {
     try {
