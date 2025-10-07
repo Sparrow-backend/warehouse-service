@@ -1,4 +1,7 @@
 const mongoose = require('mongoose')
+require('../warehouse/warehouse.mongo')
+require('../consolidation/consolidation.mongo')
+require('../user/user.mongo')
 
 const ParcelSchema = new mongoose.Schema({
     trackingNumber: {
@@ -42,6 +45,7 @@ const ParcelSchema = new mongoose.Schema({
             "created",
             "at_warehouse",
             "consolidated",
+            "assigned_to_driver",
             "in_transit",
             "out_for_delivery",
             "delivered",
@@ -73,11 +77,14 @@ const ParcelSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "User"
     },
+    assignedDriver: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
+    },
     createdTimeStamp: {
         type: Date,
         default: Date.now
     }
-
 })
 
 module.exports = mongoose.model("Parcel", ParcelSchema);
